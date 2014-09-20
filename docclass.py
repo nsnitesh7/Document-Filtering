@@ -14,6 +14,7 @@ class classifier:
 		# Counts of documents in each category
 		self.cc={}
 		self.getfeatures=getfeatures
+		self.thresholds={}
 	
 	# Increase the count of a feature/category pair
 	def incf(self,f,cat):
@@ -61,6 +62,28 @@ class classifier:
 		# Calculate the weighted average
 		bp=((weight*ap)+(totals*basicprob))/(weight+totals)
 		return bp
+	def setthreshold(self,cat,t):
+		self.thresholds[cat]=t
+	def getthreshold(self,cat):
+		if cat not in self.thresholds:
+			return 1.0
+		return self.thresholds[cat]
+	def classify(self,item,default=None):
+		probs={}
+		# Find the category with the highest probability
+		max=0.0
+		for cat in self.categories( ):
+			probs[cat]=self.prob(item,cat)
+			if probs[cat]>max:
+				max=probs[cat]
+				best=cat
+		# Make sure the probability exceeds threshold*next best
+		for cat in probs:
+			if cat==best:
+				continue
+			if probs[cat]*self.getthreshold(best)>probs[best]:
+				return default
+		return best
 
 class naivebayes(classifier):
 	def docprob(self,item,cat):
